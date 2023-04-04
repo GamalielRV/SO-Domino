@@ -1,3 +1,6 @@
+#ifndef LISTAMAZO_FILE
+#define LISTAMAZO_FILE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "nodoMazo.h"
@@ -120,3 +123,4 @@ void eliminarNodoMazo(struct listaMazo * lista, struct nodoMazo * nodo){
     }
 }
 
+#endif
