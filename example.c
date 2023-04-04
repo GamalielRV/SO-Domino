@@ -21,6 +21,8 @@ typedef struct
 
 void *print_message_function(void *ptr);
 
+
+
 main()
 {
     pthread_t thread1, thread2, thread3;

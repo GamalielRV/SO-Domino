@@ -1,9 +1,3 @@
-
-#include "listaMazo.h"
-#include "listaTablero.h"
-#include <stdio.h>
-#include <stdlib.h>
-
 int main(void){
     
     int vectorUP[28] = {0,1,2,3,4,5,6,1,2,3,4,5,6,2,3,4,5,6,3,4,5,6,4,5,6,5,6,6};

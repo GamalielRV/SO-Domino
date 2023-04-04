@@ -310,7 +310,8 @@ El siguiente metodo realiza todos los llamados para que el algoritmo que el jueg
 El el metodo al que hay que llamar cuando se necesita jugar una ficha
 Adicionalmente este metodo tambien retorna las fichas que no fueron jugadas al mazo
 */
-void insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * listTablero){
+int insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * listTablero){
+    int puntos=0;
     struct listaSalida * listSalida = newListaSalida();
     struct listaPosible * listPosible = newListaPosible();
     struct listaPosible * listaJugables = newListaPosible();
@@ -331,9 +332,12 @@ void insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * list
     if(listaJugables->primero != NULL){
         struct nodoTablero * nodoAux = newNodoTablero(listaJugables->primero->unaficha,listaJugables->primero->padre);
         insertarNodoTablero(listaJugables->primero->padre,nodoAux,listaJugables->primero->dirrecion,listaJugables->primero->rotacion);
+         puntos = (listaJugables->primero->puntos)/5;
     }else if(listPosible->primero != NULL){
         struct nodoTablero * nodoAux = newNodoTablero(listaJugables->primero->unaficha,listPosible->primero->padre);
         insertarNodoTablero(listPosible->primero->padre,nodoAux,listPosible->primero->dirrecion,listPosible->primero->rotacion);
+    
+         puntos = 0;
     }
     //Regresando las fichas al mazo
     if(listaJugables->primero != NULL){
@@ -369,5 +373,6 @@ void insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * list
     free(listPosible);
     free(listaJugables);
     free(listSalida);
+    return puntos;
 }
 
