@@ -21,25 +21,27 @@ int const MAX_JUGADORES = 7;
 pthread_mutex_t JUGADORES_TURNO[MAX_JUGADORES];
 struct listaMazo *unaLista;
 struct listaTablero *tablero;
-    
+int juegoTerminado = 0;
+
 /**Codigo a a acomodar por Gama */
 void *Turno(void *ptr)
 {
-    // aca sacan el mazo y llaman a insertarFicha !!!!!
 
     JugadorAux *jugador = (JugadorAux*)ptr;
     printf("Jugador %d esperando turno, %d!!\n", jugador->id, jugador->turno);
-    while (1)
+    while (juegoTerminado == 0)
     {   
         pthread_mutex_lock(jugador->turno);
         printf("--------------------------\n");
         // aca sacan el mazo y llaman a insertarFicha !!!!!
         printf("Jugador %d jugando!!\n", jugador->id);
         sleep(2); //simula el tiempo que tarda en jugar
-        /**
-         * REvisen esto jajajaj
-        */
-        while( jugador->mazo->primero != NULL || unaLista->primero != NULL){
+        
+        if (jugador->mazo->primero != NULL || unaLista->primero != NULL)
+        {
+            /**
+             * REvisen esto jajajaj
+            */
             printf("Jugando el turno de %s\n",jugador->nombre);
             printf("Fichas de %s\n",jugador->nombre);
             imprimirLista(jugador->mazo);
@@ -80,7 +82,11 @@ void *Turno(void *ptr)
             printf("\n-------------------------------------------------------\n");
         }
         //Aqui seguiria mostrar al ganador y el registro del ganador
-
+        else
+        {
+            juegoTerminado = 1;
+        }
+        
         printf("Jugador %d termino su turno!!\n", jugador->id);
         printf("--------------------------\n");
         pthread_mutex_unlock(jugador->siguienteJugadorTurno);
@@ -88,7 +94,7 @@ void *Turno(void *ptr)
         // y llamar a un break
     }
 
-    printf("Jugador %d termino su turno!!\n", jugador->id);
+    printf("Jugador %d: Termino Partida!!\n", jugador->id);
 
 }
 
@@ -116,7 +122,6 @@ void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores, JugadorAu
         jugador ->siguienteJugadorTurno = &JUGADORES_TURNO[(i+1)%cantidadJugadores];
         pthread_mutex_lock(jugador ->turno);
         printf("Jugador %d creado, %d!!\n", jugador->id, jugador->turno);
-
         jugador = jugador->siguiente;
 
     }
@@ -140,7 +145,7 @@ void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores, JugadorAu
         // se debe de agregar mas atributos al jugador
         // como el nombre, el mazo, etc
         //primera se bloquea el mutex y luego se crea el hilo
-        pthread_mutex_unlock(jugadorInicial ->turno);
+        pthread_mutex_unlock(jugadorInicial->siguiente ->turno);
         pthread_join(jugador->thread, NULL);
         jugador = jugador->siguiente;
 
