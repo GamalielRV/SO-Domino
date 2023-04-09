@@ -13,6 +13,102 @@
 FILE *registroJuego;
 FILE *registroGanador;
 
+
+/**
+ * Thread section
+*/
+int const MAX_JUGADORES = 7;
+pthread_mutex_t JUGADORES_TURNO[MAX_JUGADORES];
+
+    
+/**Codigo a a acomodar por Gama */
+void *Turno(void *ptr)
+{
+    // aca sacan el mazo y llaman a insertarFicha !!!!!
+
+    JugadorAux *jugador = (JugadorAux*)ptr;
+    printf("Jugador %d esperando turno, %d!!\n", jugador->id, jugador->turno);
+    while (1)
+    {   
+        pthread_mutex_unlock(&jugador->turno);
+        printf("--------------------------\n");
+        // aca sacan el mazo y llaman a insertarFicha !!!!!
+        printf("Jugador %d jugando!!\n",jugador->id);
+        sleep(5); //simula el tiempo que tarda en jugar
+
+        printf("Jugador %d termino su turno!!\n", jugador->id);
+        printf("--------------------------\n");
+        pthread_mutex_unlock(&jugador->siguienteJugadorTurno);
+        // poner un condicional cuando el juego termine
+        // y llamar a un break
+    }
+
+    printf("Jugador %d termino su turno!!\n", jugador->id);
+
+}
+
+
+void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores)
+{   
+    printf("Iniciando juego...\n");
+    // Inicializar los mutexes
+    for (int i = 0; i < 7; i++) {
+        pthread_mutex_init(&JUGADORES_TURNO[i], NULL);
+    }
+
+    // Inicializar los jugadores
+    JugadorAux *jugador = listaJugadores->primero;
+    for (size_t i = 0; i < cantidadJugadores; i++)
+    {   
+        // scan para obtener datos
+        // se debe de agregar mas atributos al jugador
+        // como el nombre, el mazo, etc
+        //primera se bloquea el mutex y luego se crea el hilo
+        pthread_t thread_tmp;
+        jugador ->id = i;
+        jugador ->turno = &JUGADORES_TURNO[i];
+        jugador ->siguienteJugadorTurno =&JUGADORES_TURNO[( i + 1 ) % cantidadJugadores];
+        jugador ->thread = &thread_tmp;
+        pthread_mutex_lock(jugador->turno);
+        jugador = jugador->siguiente;
+
+    }
+
+    jugador = listaJugadores->primero;
+    for (size_t i = 0; i < cantidadJugadores; i++)
+    {   
+        // scan para obtener datos
+        // se debe de agregar mas atributos al jugador
+        // como el nombre, el mazo, etc
+        //primera se bloquea el mutex y luego se crea el hilo
+        pthread_create(&jugador ->thread, NULL, Turno, jugador);
+        jugador = jugador->siguiente;
+
+    }
+
+    jugador = listaJugadores->primero;
+    for (size_t i = 0; i < cantidadJugadores; i++)
+    {   
+        // scan para obtener datos
+        // se debe de agregar mas atributos al jugador
+        // como el nombre, el mazo, etc
+        //primera se bloquea el mutex y luego se crea el hilo
+
+        pthread_join(jugador->thread, NULL);
+        jugador = jugador->siguiente;
+
+    }
+    printf("Cantidad de jugadores: %d\n", cantidadJugadores);
+
+}
+
+
+
+
+/*
+* Thread section
+*/
+
 int main(void){
     int num_jugadores;
     int const MAX_JUGADORES = 7;
@@ -41,7 +137,7 @@ int main(void){
     printf("Información de jugadores:\n");
     for (int i = 0; i < num_jugadores; i++)
     {
-        printf("Jugador %d: %s, %d fichas\n", i + 1, nombres_jugadores[i]);
+        printf("Jugador %d: %s, %d fichas\n", i + 1, nombres_jugadores[i], 0);
     }
 
     // Iniciar juego
@@ -87,8 +183,6 @@ int main(void){
         //Metodo que ingresa la primera ficha
         int contPriTurno = 0;
         primerTurno = 1;
-
-        // se encuetra la ficha mas alta si no null y empieza el primera 
         jugador = encontrarFichaAlta(listaJugadores);
         if(jugador != NULL){
             primerTurno = 1;
@@ -105,10 +199,11 @@ int main(void){
     /*
     *  Esto es lo que hay que paralelizar
     */
-
+    printf("num_jugadores: %d\n",num_jugadores);
+    EmpezarJuego(num_jugadores, listaJugadores);
+    /*
     //Iniciando Juego
     if(jugador != NULL){
-
         if(jugador->siguiente == NULL){
             jugador = listaJugadores->primero;
         }else{
@@ -165,4 +260,8 @@ int main(void){
         printf("El ganador del juego es: %s\n", getNombreGanador(registroGanador));
 
     }
+    */
+
+    printf("Fin del juego\n");
+    return 0;
 };
