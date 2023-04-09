@@ -19,7 +19,8 @@ FILE *registroGanador;
 */
 int const MAX_JUGADORES = 7;
 pthread_mutex_t JUGADORES_TURNO[MAX_JUGADORES];
-
+struct listaMazo *unaLista;
+struct listaTablero *tablero;
     
 /**Codigo a a acomodar por Gama */
 void *Turno(void *ptr)
@@ -30,15 +31,59 @@ void *Turno(void *ptr)
     printf("Jugador %d esperando turno, %d!!\n", jugador->id, jugador->turno);
     while (1)
     {   
-        pthread_mutex_unlock(&jugador->turno);
+        pthread_mutex_lock(jugador->turno);
         printf("--------------------------\n");
         // aca sacan el mazo y llaman a insertarFicha !!!!!
-        printf("Jugador %d jugando!!\n",jugador->id);
-        sleep(5); //simula el tiempo que tarda en jugar
+        printf("Jugador %d jugando!!\n", jugador->id);
+        sleep(2); //simula el tiempo que tarda en jugar
+        /**
+         * REvisen esto jajajaj
+        */
+        while( jugador->mazo->primero != NULL || unaLista->primero != NULL){
+            printf("Jugando el turno de %s\n",jugador->nombre);
+            printf("Fichas de %s\n",jugador->nombre);
+            imprimirLista(jugador->mazo);
+            if(jugador->mazo->primero == NULL){
+                printf("\n");
+                printf("%s Comio una ficha \n",jugador->nombre);
+                printf("comio la ficha ");
+                printf("\n");
+                imprimirFicha(unaLista->primero->unaFicha);
+                insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
+                eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
+                ordenarLista(jugador->mazo);
+            }else{
+                printf("\n");
+                int puntos = insertarFichaAJugar(jugador->mazo, tablero);
+                if(puntos == -1){
+                    printf("\n");
+                    printf("%s Comio una ficha \n",jugador->nombre);
+                    printf("comio la ficha ");
+                    imprimirFicha(unaLista->primero->unaFicha);
+                    printf("\n");
+                    insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
+                    eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
+                    ordenarLista(jugador->mazo);
+                }else{
+                    printf("%s Jugo una ficha \n",jugador->nombre);
+                    printf("%s Gano %d Puntos \n",jugador->nombre,puntos);
+                    //Llamar al metodo de aciertaPuntos
+                    //aciertaPuntos(registroJuego, jugador->nombre, puntos);
+                   
+                }
+
+            }
+            printf("Fin del turno de %s\n",jugador->nombre);
+            printf("-------------------------------------------------------\n");
+            printf("\nFichas restantes para comer \n");
+            imprimirLista(unaLista);
+            printf("\n-------------------------------------------------------\n");
+        }
+        //Aqui seguiria mostrar al ganador y el registro del ganador
 
         printf("Jugador %d termino su turno!!\n", jugador->id);
         printf("--------------------------\n");
-        pthread_mutex_unlock(&jugador->siguienteJugadorTurno);
+        pthread_mutex_unlock(jugador->siguienteJugadorTurno);
         // poner un condicional cuando el juego termine
         // y llamar a un break
     }
@@ -48,7 +93,7 @@ void *Turno(void *ptr)
 }
 
 
-void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores)
+void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores, JugadorAux *jugadorInicial)
 {   
     printf("Iniciando juego...\n");
     // Inicializar los mutexes
@@ -66,10 +111,12 @@ void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores)
         //primera se bloquea el mutex y luego se crea el hilo
         pthread_t thread_tmp;
         jugador ->id = i;
+        jugador ->thread = thread_tmp;
         jugador ->turno = &JUGADORES_TURNO[i];
-        jugador ->siguienteJugadorTurno =&JUGADORES_TURNO[( i + 1 ) % cantidadJugadores];
-        jugador ->thread = &thread_tmp;
-        pthread_mutex_lock(jugador->turno);
+        jugador ->siguienteJugadorTurno = &JUGADORES_TURNO[(i+1)%cantidadJugadores];
+        pthread_mutex_lock(jugador ->turno);
+        printf("Jugador %d creado, %d!!\n", jugador->id, jugador->turno);
+
         jugador = jugador->siguiente;
 
     }
@@ -93,7 +140,7 @@ void EmpezarJuego(int cantidadJugadores, ListaJugador *listaJugadores)
         // se debe de agregar mas atributos al jugador
         // como el nombre, el mazo, etc
         //primera se bloquea el mutex y luego se crea el hilo
-
+        pthread_mutex_unlock(jugadorInicial ->turno);
         pthread_join(jugador->thread, NULL);
         jugador = jugador->siguiente;
 
@@ -145,7 +192,7 @@ int main(void){
 
     int vectorUP[28] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 3, 4, 5, 6, 4, 5, 6, 5, 6, 6};
     int vectorDown[28] = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6};
-    struct listaMazo *unaLista = crearLista();
+    unaLista = crearLista(); // tiene que ser global 
     for (size_t i = 0; i < 28; i++)
     {
         struct ficha *unaFicha = newFicha(vectorUP[i], vectorDown[i], i);
@@ -154,7 +201,7 @@ int main(void){
     }
     int cont = 0;
     int primerTurno = 0;
-    struct listaTablero *tablero = newListaTablero();
+    tablero = newListaTablero();
     int fichasXJugador = floor(28 /(num_jugadores+1));
     ListaJugador* listaJugadores = newListaJugador();
     JugadorAux* jugador = NULL;
@@ -200,67 +247,11 @@ int main(void){
     *  Esto es lo que hay que paralelizar
     */
     printf("num_jugadores: %d\n",num_jugadores);
-    EmpezarJuego(num_jugadores, listaJugadores);
-    /*
-    //Iniciando Juego
-    if(jugador != NULL){
-        if(jugador->siguiente == NULL){
-            jugador = listaJugadores->primero;
-        }else{
-            jugador = jugador->siguiente;
-        }
-        while( jugador->mazo->primero != NULL || unaLista->primero != NULL){
-            printf("Jugando el turno de %s\n",jugador->nombre);
-            printf("Fichas de %s\n",jugador->nombre);
-            imprimirLista(jugador->mazo);
-            if(jugador->mazo->primero == NULL){
-                printf("\n");
-                printf("%s Comio una ficha \n",jugador->nombre);
-                printf("comio la ficha ");
-                printf("\n");
-                imprimirFicha(unaLista->primero->unaFicha);
-                insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
-                eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
-                ordenarLista(jugador->mazo);
-            }else{
-                printf("\n");
-                int puntos = insertarFichaAJugar(jugador->mazo,tablero);
-                if(puntos == -1){
-                    printf("\n");
-                    printf("%s Comio una ficha \n",jugador->nombre);
-                    printf("comio la ficha ");
-                    imprimirFicha(unaLista->primero->unaFicha);
-                    printf("\n");
-                    insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
-                    eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
-                    ordenarLista(jugador->mazo);
-                }else{
-                    printf("%s Jugo una ficha \n",jugador->nombre);
-                    printf("%s Gano %d Puntos \n",jugador->nombre,puntos);
-                    //Llamar al metodo de aciertaPuntos
-                    aciertaPuntos(registroJuego, jugador->nombre, puntos);
-                }
+    EmpezarJuego(num_jugadores, listaJugadores, jugador);
+            
+    //finJuego(registroJuego, registroGanador);
+    //printf("El ganador del juego es: %s\n", getNombreGanador(registroGanador));
 
-            }
-            printf("Fin del turno de %s\n",jugador->nombre);
-            printf("-------------------------------------------------------\n");
-            //sleep(2);
-            if(jugador->siguiente == NULL){
-                jugador = listaJugadores->primero;
-            }else{
-                jugador = jugador->siguiente;
-            }
-            printf("\nFichas restantes para comer \n");
-            imprimirLista(unaLista);
-            printf("\n-------------------------------------------------------\n");
-        }
-        //Aqui seguiria mostrar al ganador y el registro del ganador
-        
-        finJuego(registroJuego, registroGanador);
-        printf("El ganador del juego es: %s\n", getNombreGanador(registroGanador));
-
-    }
-    */
 
     printf("Fin del juego\n");
     return 0;

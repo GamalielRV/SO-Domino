@@ -18,8 +18,8 @@ typedef struct JugadorAux
 
     //gama agrego esto
     pthread_t thread; // Hilo del jugador 
-    pthread_mutex_t* siguienteJugadorTurno; // Puntero al siguiente mutex en la secuencia
-    pthread_mutex_t* turno; // Puntero al mutex actual
+    pthread_mutex_t *siguienteJugadorTurno; // Puntero al siguiente mutex en la secuencia
+    pthread_mutex_t *turno; // Puntero al mutex actual
 
 } JugadorAux;
 
