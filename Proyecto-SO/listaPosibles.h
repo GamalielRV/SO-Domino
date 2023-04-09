@@ -101,7 +101,7 @@ int sizePosible(struct listaPosible * lista){
         }
         return cont;
     }else{
-        printf("la lista esta vacia");
+       // printf("la lista esta vacia");
     }
 }
 
@@ -122,7 +122,7 @@ void eliminarNodoPosible(struct nodoPosible * nodo, struct listaPosible * lista)
             }
         }
     }else{
-        printf("la Lista esta vacia");
+        //printf("la Lista esta vacia");
     }
 }
 /*
@@ -148,7 +148,7 @@ void moverFichasJugables(struct listaPosible * posibles, struct listaPosible * j
             eliminarNodoPosible(nodoAux,posibles);
         }
     }else{
-        printf("la Lista esta vacia");
+       // printf("la Lista esta vacia");
     }
     
 }
@@ -176,7 +176,7 @@ void ordenarListaPosibles(struct listaPosible * list){
             nodoTemp = nodoTemp->siguiente;
         }
     }else{
-        printf("lista vacia");
+       // printf("lista vacia");
     }
 }
 

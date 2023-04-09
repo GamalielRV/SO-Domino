@@ -41,17 +41,52 @@ void aciertaPuntos(FILE *archivo, char *nomJugador, int cantPuntos)
                 }
             }
         }
-        fprintf(archivo, "TotalPuntos%s %d\n", nomJugador, (contPuntos / 5));
+        fprintf(archivo, "TotalPuntos%s %d\n", nomJugador, contPuntos);
         rewind(archivo);
 
         fclose(archivo);
     }
 }
 
+char *getNombreGanador(FILE *archivo)
+{
+    char *ganador = malloc(sizeof(char) * 15); // Reserva memoria para el arreglo;
+    archivo = fopen("totalJuegoGanados.txt", "r");
+
+    if (archivo == NULL)
+    {
+        printf("No fue posible abrir el archivo\n");
+    }
+    else
+    {
+        char linea[30];
+        int puntajeMayor = 0, puntajeLinea;
+
+        while (fgets(linea, sizeof(linea), archivo) != NULL)
+        {
+            if (sscanf(linea, "%*[^0-9]%d", &puntajeLinea) == 1) // Guardo en la variable puntajeLinea el valor del puntaje de la linea
+            {
+                if (puntajeLinea >= puntajeMayor)
+                {
+                    puntajeMayor = puntajeLinea;
+                    //char palabra[30];
+                    sscanf(linea, "%s", ganador); // Guardo el valor de la primer palabra de la linea
+                    
+                }
+            }
+        }
+        
+        fclose(archivo);
+        rewind(archivo);
+    }
+
+    return ganador;
+}
+
 void finJuego(FILE *arch1, FILE *arch2)
 {
     char ganador[15];
-    arch1 = fopen("log.txt", "r");
+    arch1 = fopen("/home/jbdolmus/Escritorio/Proyecto-SO/log.txt", "r");
     if (arch1 == NULL)
     {
         printf("No fue posible abrir el archivo\n");
@@ -95,7 +130,7 @@ void finJuego(FILE *arch1, FILE *arch2)
                             }
                         }
                         ganador[j] = '\0'; // Añado el caracter nulo al final del arreglo ganador para establecer el final del array
-                        //printf("%s\n", ganador);
+                        // printf("%s\n", ganador);
                     }
                 }
             }
@@ -124,7 +159,7 @@ void finJuego(FILE *arch1, FILE *arch2)
         }
         else
         {
-            fseek (arch2, 0, SEEK_SET);// Ubico el cursor al principio del fichero
+            fseek(arch2, 0, SEEK_SET); // Ubico el cursor al principio del fichero
             FILE *temporal = fopen("temporal.txt", "w");
 
             if (temporal == NULL)
@@ -137,17 +172,16 @@ void finJuego(FILE *arch1, FILE *arch2)
             {
                 sscanf(linea, "%*[^0123456789]%d", &puntaje); // Guardo en la variable puntaje los puntos de cada jugador por linea
                 sscanf(linea, "%s", ganadorTxt);              // Guardo en la variable ganadorTxt el nombre del ganador en dicha linea
-                
+
                 if (strncmp(ganadorTxt, ganador, strlen(ganador)) == 0)
                 {
-                    
+
                     puntaje++;
-                    //printf("Entro");
-                    
+                    // printf("Entro");
                 }
                 else
                 {
-                    printf("Entro2");
+                    // printf("Entro2");
                     fputs(linea, temporal);
                     puntaje = 1;
                     // printf("%s\n",linea);
@@ -172,15 +206,5 @@ void finJuego(FILE *arch1, FILE *arch2)
 
         fclose(arch2);
     }
-}
-
-int main()
-{
-
-    int cantidadPuntos = 5;
-    char *nomJugador = "Leo";
-     aciertaPuntos(registroJuego, nomJugador, cantidadPuntos);
-    //finJuego(registroJuego, registroGanador);
-
-    return 0;
+    
 }

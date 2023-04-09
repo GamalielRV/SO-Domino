@@ -1,8 +1,10 @@
+#ifndef MainPrueba
+#define MainPrueba
 #include "listaMazo.h"
 #include "listaTablero.h"
 #include "JugadorAux.h"
 #include "fichero.c"
-
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,9 +15,31 @@
 FILE *registroJuego;
 FILE *registroGanador;
 
-int main(void){
-    int num_jugadores;
-    int const MAX_JUGADORES = 7;
+unsigned int sleep(unsigned int seconds);
+
+/*
+ * Variables globales, solo se pueden editar en el main
+ */
+void inicializar_jugadores()
+{
+
+    // se inicializa el arreglo de jugadores y los mutexes y se les asigna memoria dinamica
+    JUGADORES = malloc(MAX_JUGADORES * sizeof(Jugador));
+    JUGADORES_TURNO = malloc(MAX_JUGADORES * sizeof(pthread_mutex_t));
+}
+int const MAX_JUGADORES = 7;
+
+int num_jugadores;
+int fichasXJugador = 0;
+ListaJugador *listaJugadores;
+struct listaMazo *unaLista ;
+char **nombres_jugadores;
+struct listaTablero *tablero;
+JugadorAux* jugador = NULL;
+
+
+void *solicitudDeDatos()
+{
     printf("Bienvenido al juego de domino\n");
 
     // Pedir número de jugadores
@@ -29,7 +53,7 @@ int main(void){
         scanf("%d", &num_jugadores);
     }
     // Pedir nombres de jugadores
-    char **nombres_jugadores = (char **)malloc(num_jugadores * sizeof(char *));
+    nombres_jugadores = (char **)malloc(num_jugadores * sizeof(char *));
     for (int i = 0; i < num_jugadores; i++)
     {
         nombres_jugadores[i] = (char *)malloc(50 * sizeof(char));
@@ -43,26 +67,33 @@ int main(void){
     {
         printf("Jugador %d: %s, %d fichas\n", i + 1, nombres_jugadores[i]);
     }
+}
 
-    // Iniciar juego
-    //EmpezarJuego(num_jugadores, nombres_jugadores);
-
+void *crearMazo()
+{
     int vectorUP[28] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 3, 4, 5, 6, 4, 5, 6, 5, 6, 6};
     int vectorDown[28] = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6};
-    struct listaMazo *unaLista = crearLista();
+    unaLista = crearLista();
     for (size_t i = 0; i < 28; i++)
     {
         struct ficha *unaFicha = newFicha(vectorUP[i], vectorDown[i], i);
         struct nodoMazo *unNodo = crearNodo(unaFicha);
         insertarNodo(unNodo, unaLista);
     }
-    int cont = 0;
-    int primerTurno = 0;
+
     struct listaTablero *tablero = newListaTablero();
-    int fichasXJugador = floor(28 /(num_jugadores+1));
-    ListaJugador* listaJugadores = newListaJugador();
-    JugadorAux* jugador = NULL;
-    //repoarte las fichas que le tocan a cada jugador
+    fichasXJugador = floor(28 / (num_jugadores + 1));
+    listaJugadores = newListaJugador();
+    JugadorAux *jugador = NULL;
+}
+
+
+void *llenarJugadores()
+{
+    struct listaTablero *tablero = newListaTablero();
+    int primerTurno = 0;
+    int cont = 0;
+    jugador = NULL;
     while(primerTurno != 1){
         listaJugadores = newListaJugador();
         while( cont < num_jugadores){
@@ -99,62 +130,88 @@ int main(void){
             eliminarNodoMazo(jugador->mazo,nodoTemp);
         }
     }
-    //Iniciando Juego
-    if(jugador != NULL){
-        if(jugador->siguiente == NULL){
-            jugador = listaJugadores->primero;
-        }else{
-            jugador = jugador->siguiente;
-        }
-        while( jugador->mazo->primero != NULL || unaLista->primero != NULL){
-            printf("Jugando el turno de %s\n",jugador->nombre);
-            printf("Fichas de %s\n",jugador->nombre);
-            imprimirLista(jugador->mazo);
-            if(jugador->mazo->primero == NULL){
-                printf("\n");
-                printf("%s Comio una ficha \n",jugador->nombre);
-                printf("comio la ficha ");
-                printf("\n");
-                imprimirFicha(unaLista->primero->unaFicha);
-                insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
-                eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
-                ordenarLista(jugador->mazo);
-            }else{
-                printf("\n");
-                int puntos = insertarFichaAJugar(jugador->mazo,tablero);
-                if(puntos == -1){
-                    printf("\n");
-                    printf("%s Comio una ficha \n",jugador->nombre);
-                    printf("comio la ficha ");
-                    imprimirFicha(unaLista->primero->unaFicha);
-                    printf("\n");
-                    insertarNodo(crearNodo(unaLista->primero->unaFicha),jugador->mazo);
-                    eliminarNodoMazo(unaLista,crearNodo(unaLista->primero->unaFicha));
-                    ordenarLista(jugador->mazo);
-                }else{
-                    printf("%s Jugo una ficha \n",jugador->nombre);
-                    printf("%s Gano %d Puntos \n",jugador->nombre,puntos);
-                    //Llamar al metodo de aciertaPuntos
-                    aciertaPuntos(registroJuego, jugador->nombre, puntos);
-                }
+}
+/**Codigo a a acomodar por Gama */
+void *Turno(void *ptr)
+{
 
-            }
-            printf("Fin del turno de %s\n",jugador->nombre);
-            printf("-------------------------------------------------------\n");
-            //sleep(2);
-            if(jugador->siguiente == NULL){
-                jugador = listaJugadores->primero;
-            }else{
-                jugador = jugador->siguiente;
-            }
-            printf("\nFichas restantes para comer \n");
-            imprimirLista(unaLista);
-            printf("\n-------------------------------------------------------\n");
-        }
-        //Aqui seguiria mostrar al ganador y el registro del ganador
-        
-        finJuego(registroJuego, registroGanador);
-        printf("El ganador del juego es: %s\n", getNombreGanador(registroGanador));
+    printf("Jugador %d esperando turno!!\n", jugador->id);
+    sleep(1); // simula el tiempo que tarda en jugar
+    while (1)
+    {
+        pthread_mutex_lock(jugador->turno);
+        printf("--------------------------\n");
+        // aca sacan el mazo y llaman a insertarFicha !!!!!
+        printf("Jugador %d jugando!!\n", jugador->id);
+        sleep(5); // simula el tiempo que tarda en jugar
 
+        printf("Jugador %d termino su turno!!\n", jugador->id);
+        printf("--------------------------\n");
+        pthread_mutex_unlock(jugador->siguienteJugadorTurno);
+        // poner un condicional cuando el juego termine
+        // y llamar a un break
     }
+}
+
+
+void EmpezarJuego()
+{   
+    crearMazo();
+    solicitudDeDatos();
+    llenarJugadores();
+
+    // Inicializar los mutexes
+    for (int i = 0; i < 7; i++)
+    {
+        pthread_mutex_init(&JUGADORES_TURNO[i], NULL);
+    }
+
+    // Inicializar los jugadores
+    for (size_t i = 0; i < num_jugadores; i++)
+    {
+        // scan para obtener datos
+        // se debe de agregar mas atributos al jugador
+        // como el nombre, el mazo, etc
+        pthread_t thread_tmp;
+        JUGADORES[i].id = i;
+        JUGADORES[i].turno = &JUGADORES_TURNO[i];
+        JUGADORES[i].siguienteJugadorTurno = &JUGADORES_TURNO[(i + 1) % num_jugadores];
+        JUGADORES[i].thread = &thread_tmp;
+    }
+
+    // Quien iniciara el juego
+    for (size_t k = 0; k < num_jugadores; k++)
+    {
+        if (jugador->id != JUGADORES[k].id)
+        {
+            // bloquea el mutex del jugador que no inicia
+            // solo el jugador que inicia el juego no se le bloquea el mutex
+            pthread_mutex_lock(JUGADORES[k].turno);
+        }
+    }
+
+
+
+
+    // Crear los hilos
+    for (size_t l = 0; l < num_jugadores; l++)
+    {
+        pthread_create(&JUGADORES[l].thread, NULL, Turno, &JUGADORES[l]);
+    }
+
+    for (size_t m = 0; m < num_jugadores; m++)
+    {
+        pthread_join(JUGADORES[m].thread, NULL);
+    }
+}
+
+int main(void)
+{
+
+
+    printf("Cantidad de jugadores: %d\n", num_jugadores);
+    EmpezarJuego();
+
+    return 0;
 };
+#endif

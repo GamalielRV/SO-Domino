@@ -33,9 +33,7 @@ void insertarNodo(struct nodoMazo* nodo, struct listaMazo* lista){
 void imprimirLista(struct listaMazo* lista){
     struct nodoMazo* nodoAux = lista->primero;
     while(nodoAux != NULL){
-        printf("Ficha %d",nodoAux->unaFicha->valUp);
-        printf("/");
-        printf("%d\n",nodoAux->unaFicha->valDown);
+        imprimirFicha(nodoAux->unaFicha);
         nodoAux = nodoAux->siguiente;
     }
 };
@@ -62,22 +60,23 @@ void ordenarLista(struct listaMazo* lista){
 };
 
 struct nodoMazo* encontrarNodo(int posicion, struct listaMazo* lista){
-    if(lista->primero != NULL){
-        struct nodoMazo * nodoAux = lista->primero;
-        int contPos = 0;
-        while(nodoAux->siguiente != NULL && contPos != posicion){
-            contPos += 1;
-            nodoAux = nodoAux->siguiente;
+    // puntero auxiliar para recorrer la lista
+    struct nodoMazo * nodoActual = lista->primero;
+    int cont = 0;
+    // recorrer la lista enlazada
+    while (nodoActual != NULL) {
+        // si se encuentra el nodo buscado, devolver un puntero al nodo
+        if (cont == posicion) {
+            return nodoActual;
+        }else{
+            cont ++;
         }
-        if(nodoAux == NULL){
-            printf("no se encontro el nodo");
-        }
-        printf("se encontro el nodo %d\n",posicion);
-        struct nodoMazo * self = crearNodo(nodoAux->unaFicha);
-        return self;
-    }else{
-        printf("no se encontro el nodo");
+        // avanzar al siguiente nodo de la lista
+        nodoActual = nodoActual->siguiente;
     }
+
+    // si el nodo no está en la lista, devolver NULL
+    return lista->primero;
 }
 
 int size(struct listaMazo * lista){
@@ -99,28 +98,31 @@ void limpiarNodo(struct nodoMazo * nodo){
 }
 
 void eliminarNodoMazo(struct listaMazo * lista, struct nodoMazo * nodo){
-    if(lista->primero != NULL){
-        if(lista->primero == nodo){
-            if(lista->primero->siguiente == NULL){
-                lista->primero = NULL;
-            }else{
-                lista->primero = lista->primero->siguiente;
-            }
-        }else{
-            struct nodoMazo * nodoAux = lista->primero;
-            int flag = 0;
-            while(flag != 1 && nodoAux->siguiente != NULL){
-                if(nodoAux->siguiente == nodo){
-                    nodoAux->siguiente = nodo->siguiente;
-                    flag = 1;
-                }
-                nodoAux = nodoAux->siguiente;
-            }
+
+    if(nodo != NULL){
+        struct nodoMazo * nodoActual = lista->primero;
+
+        // si el nodo a eliminar es el primer nodo de la lista
+        if (nodoActual != NULL && nodoActual->unaFicha == nodo->unaFicha) {
+            // actualizar el puntero del primer nodo para que apunte al siguiente nodo
+            lista->primero = nodoActual->siguiente;
+            // liberar la memoria del nodo eliminado
+            free(nodoActual);
+            return;
         }
-        //limpiarNodo(nodo);
-    }else{
-        printf("la lista esta vacia");
+        struct nodoMazo * nodoAnterior = NULL;
+        while (nodoActual != NULL && nodoActual->unaFicha != nodo->unaFicha) {
+            nodoAnterior = nodoActual;
+            nodoActual = nodoActual->siguiente;
+        }
+        if (nodoActual != NULL) {
+            // actualizar el puntero del nodo anterior para que apunte al siguiente nodo
+            nodoAnterior->siguiente = nodoActual->siguiente;
+            // liberar la memoria del nodo eliminado
+            free(nodoActual);
+        }
     }
+    
 }
 
 #endif

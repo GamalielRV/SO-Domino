@@ -111,7 +111,7 @@ void encontrarPuntas(struct nodoTablero* actual){
             encontrarPuntas(actual->abajo);
         }
     }else{
-        printf("el nodo no existe");
+        //printf("el nodo no existe");
     }
 }
 /*
@@ -146,7 +146,7 @@ void encontrarSalidas(struct nodoTablero* actual, struct listaSalida* lista){
             encontrarSalidas(actual->abajo,lista);
         }
     }else{
-        printf("el nodo no existe");
+        //printf("el nodo no existe");
     }
 }
 /*
@@ -174,7 +174,7 @@ int calcularPuntosTablero(struct nodoTablero* actual , int puntos){
         }
         return puntos;
     }else{
-        printf("el nodo no existe");
+        //printf("el nodo no existe");
     }
 }
 
@@ -215,7 +215,7 @@ void eliminarNodoTablero(struct nodoTablero * nodo, struct nodoTablero * actual)
             }
         }
     }else{
-        printf("la raiz esta vacia");
+        //printf("la raiz esta vacia");
     }
 }
 /*
@@ -258,7 +258,7 @@ void calcularPuntos(struct listaSalida* lista, struct listaPosible * lista2, str
                     if(vali == 1){
                         insertarNodoTablero(nodoTemp->raiz,nodo,nodoTemp->direc,giro);
                         int puntosTablero = calcularPuntosTablero(lista3->raiz,0);
-                        printf("  Puntos del tablero: %d\n", puntosTablero);
+                        //printf("  Puntos del tablero: %d\n", puntosTablero);
                         if(puntosTablero % 5 == 0){
                             if(nodoAux->puntos % 5 != 0){
                                 nodoAux->puntos = puntosTablero;
@@ -301,7 +301,7 @@ void calcularPuntos(struct listaSalida* lista, struct listaPosible * lista2, str
             }while(giro != 0);
             nodoTemp = nodoTemp->siguiente;
         }
-        printf("El mayor valor agregado fue: %d\n",nodoAux->puntos);
+        //printf("El mayor valor agregado fue: %d\n",nodoAux->puntos);
         nodoAux = nodoAux->siguiente;
     }
 }
@@ -321,24 +321,35 @@ int insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * listT
     ordenarListaPosibles(listPosible);//ordenamos lista posible
     moverFichasJugables(listPosible,listaJugables);//las fichas con puntos multiplos de 5 las movemos a una nueva lista posbile llamada lista jugable
     ordenarListaPosibles(listaJugables);//ordenamos la lista jugable
-    printf("Inicio \n");
+    /*
+    //printf("Inicio \n");
     imprimirListaPosibles(listPosible);
     printf("Lista Jugables \n");
     imprimirListaPosibles(listaJugables);
     printf("Lista Mazo \n");
-    imprimirLista(listMazo);
-    printf("Fin \n");
+    //imprimirLista(listMazo);
+    //printf("Fin \n");
+    */
+    
     //Verificamos si la lista jugables no esta vacias y tomamos la primera posicion de la lista y la insertamos en el tablero
     if(listaJugables->primero != NULL){
         struct nodoTablero * nodoAux = newNodoTablero(listaJugables->primero->unaficha,listaJugables->primero->padre);
         insertarNodoTablero(listaJugables->primero->padre,nodoAux,listaJugables->primero->dirrecion,listaJugables->primero->rotacion);
-         puntos = (listaJugables->primero->puntos)/5;
+        printf("Ficha Jugada: ");
+        imprimirFicha(nodoAux->unaFicha);
+        printf("\n");
+        puntos = (listaJugables->primero->puntos)/5;
     }else if(listPosible->primero != NULL){
-        struct nodoTablero * nodoAux = newNodoTablero(listaJugables->primero->unaficha,listPosible->primero->padre);
+        struct nodoTablero * nodoAux = newNodoTablero(listPosible->primero->unaficha,listPosible->primero->padre);
         insertarNodoTablero(listPosible->primero->padre,nodoAux,listPosible->primero->dirrecion,listPosible->primero->rotacion);
-    
-         puntos = 0;
+        printf("Ficha Jugada: ");
+        imprimirFicha(nodoAux->unaFicha);
+        printf("\n");
+        puntos = 0;
+    }else{
+        return -1;
     }
+    
     //Regresando las fichas al mazo
     if(listaJugables->primero != NULL){
         struct nodoPosible * nodoAux = listaJugables->primero;
@@ -364,12 +375,14 @@ int insertarFichaAJugar(struct listaMazo * listMazo, struct listaTablero * listT
         }
     }
     ordenarLista(listMazo);
-    imprimirListaPosibles(listPosible);
-    printf("Lista Jugables \n");
-    imprimirListaPosibles(listaJugables);
-    printf("Lista Mazo \n");
-    imprimirLista(listMazo);
-    printf("Fin \n");
+    /*
+        imprimirListaPosibles(listPosible);
+        printf("Lista Jugables \n");
+        imprimirListaPosibles(listaJugables);
+        printf("Lista Mazo \n");
+        imprimirLista(listMazo);
+        printf("Fin \n");
+    */
     free(listPosible);
     free(listaJugables);
     free(listSalida);

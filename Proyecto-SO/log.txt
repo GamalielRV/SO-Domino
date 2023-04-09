@@ -1,6 +1,0 @@
-Leo,5
-TotalPuntosLeo 1
-Leo,5
-TotalPuntosLeo 2
-Leo,5
-TotalPuntosLeo 3

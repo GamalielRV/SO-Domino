@@ -20,3 +20,7 @@ ficha * newFicha(int Up, int Down, int val){
    fichaAux->direccion = 0;
    return fichaAux;
 }
+
+void imprimirFicha(struct ficha* unaficha){
+    printf("[%d,%d]",unaficha->valUp,unaficha->valDown);
+}

@@ -1,5 +1,6 @@
 #ifndef JUGADOR_FILE
 #define JUGADOR_FILE
+//importante para que no se auto importen las librerias
 
 #include <stdio.h>
 #include <stdlib.h>
